@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista Zadań</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Moja Lista Zadań</h1>
+      <nav>
+        <a href="about.html" class="nav-button">O Nas</a>
+      </nav>
+    </header>
+
+    <div class="task-form">
+      <input type="text" id="new-task-name" placeholder="Nowe zadanie..." class="task-input">
+      <input type="text" id="new-task-time" placeholder="Czas wykonania" class="task-input">
+      <button onclick="addItem()" class="add-button">Dodaj Zadanie</button>
+    </div>
+
+    <ul id="item-list" class="task-list">
+      <li>Ładowanie danych...</li>
+    </ul>
+
+    <button onclick="sortItems()" class="add-button">Sortuj</button>
+  </div>
+
+    <script>
+
+async function fetchItems() {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/tasks');
+      const items = await response.json();
+
+      const list = document.getElementById('item-list');
+      list.innerHTML = '';
+
+      items.forEach(item => {
+        const li = document.createElement('li');
+        const li2 = document.createElement('li2');
+        li2.textContent = item.name;
+        li.textContent = item.time;
+
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Usuń';
+        btn.className = 'delete-button';
+        btn.onclick = () => deleteItem(item.time);
+
+
+
+        list.appendChild(li);
+        li.appendChild(li2);
+        li.appendChild(btn);
+
+      });
+    } catch (error) {
+      document.getElementById('item-list').innerHTML = '<li>Błąd ładowania danych</li>';
+      console.error('Błąd podczas pobierania:', error);
+    }
+  }
+
+  async function deleteItem(id) {
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/delete/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        fetchItems(); // Odśwież listę
+      } else {
+        console.error('Nie udało się usunąć elementu');
+      }
+    } catch (error) {
+      console.error('Błąd podczas usuwania:', error);
+    }
+  }
+
+  async function addItem() {
+    const nameInput = document.getElementById('new-task-name');
+    const timeInput = document.getElementById('new-task-time');
+
+    const newTask = {
+      name: nameInput.value,
+      time: timeInput.value
+    };
+
+    try {
+
+       const res = await fetch(`http://127.0.0.1:5000/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTask)
+      });
+
+      if (res.ok) {
+        nameInput.value = '';
+        timeInput.value = '';
+        fetchItems();
+      } else {
+        console.error('Nie udało się dodać zadania');
+      }
+    } catch (error) {
+      console.error('Błąd podczas dodawania zadania:', error);
+    }
+  }
+
+   async function sortItems() {
+   try {
+      const response = await fetch('http://127.0.0.1:5000/tasks');
+      const items = await response.json();
+
+      const list = document.getElementById('item-list');
+      list.innerHTML = '';
+      const sortedItems = items.sort((a,b) => a.time - b.time);
+      sortedItems.forEach(item => {
+        const li = document.createElement('li');
+        const li2 = document.createElement('li2');
+        li2.textContent = item.name;
+        li.textContent = item.time;
+
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Usuń';
+        btn.className = 'delete-button';
+        btn.onclick = () => deleteItem(item.time);
+
+
+
+        list.appendChild(li);
+        li.appendChild(li2);
+        li.appendChild(btn);
+
+      });
+    } catch (error) {
+      document.getElementById('item-list').innerHTML = '<li>Błąd ładowania danych</li>';
+      console.error('Błąd podczas pobierania:', error);
+    }
+   }
+  window.addEventListener('DOMContentLoaded', fetchItems);
+  </script>
+</body>
+</html>
